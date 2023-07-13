@@ -34,8 +34,6 @@ dependencies {
     implementation ("org.jetbrains.kotlin:kotlin-reflect")
     implementation ("com.fasterxml.jackson.module:jackson-module-kotlin")
 
-    //https://github.com/Vonage/vonage-jwt-jdk
-    implementation("com.vonage:jwt:1.0.2")
     //https://github.com/vonage/vonage-java-sdk
     implementation("com.vonage:client:7.6.0")
 
