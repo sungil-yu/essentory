@@ -1,12 +1,10 @@
 package com.essentory.service
 
+import com.essentory.controller.support.VonageExceptionDto
 import com.essentory.dto.verify.VerifyDto
 import com.essentory.dto.verify.VerifyReq
 import com.essentory.dto.verify.VerifyRes
-import com.essentory.exceptions.BlackListNumberException
-import com.essentory.exceptions.CriticalStatusCodeException
-import com.essentory.exceptions.RestrictedCountryException
-import com.essentory.exceptions.VonageException
+import com.essentory.exceptions.*
 import com.vonage.client.VonageClient
 import com.vonage.client.verify.VerifyRequest
 import com.vonage.client.verify.VerifyResponse
@@ -21,65 +19,90 @@ class VonageVerifyService (
 ) : VerifyService  {
 
     @Value("\${vonage_auth.brand_name}")
-    private val brandName: String? = "brand_name"
+    private val brandName: String = "brand_name"
 
     @Value("\${vonage_auth.expiry}")
-    private val expiry: String? = "180"
+    private val expiry: String = "180"
 
     override fun verifyPhone(verifyReq: VerifyReq): VerifyDto<VerifyRes> {
         try {
             val response = vonageClient.verifyClient.verify(
                     VerifyRequest.builder(verifyReq.phoneNumber(), brandName)
-                        .pinExpiry(expiry?.toExpirySeconds())
+                        .pinExpiry(expiry.toExpirySeconds())
                         .workflow(VerifyRequest.Workflow.SMS)
                         .build())
 
-            checkBlacklist(response, verifyReq.phoneNumber())
+            if(response.status !== VerifyStatus.OK){
+                val vonageExceptionDto = VonageExceptionDto(response.requestId, response.status, response.errorText, response.network)
 
-            checkCriticalStatusCode(response)
+                checkBlacklist(vonageExceptionDto)
 
-            verifyAPIAccessIsRestrictedCountry(response, verifyReq.phoneNumber())
+                checkCriticalStatusCode(vonageExceptionDto)
+
+                verifyAPIAccessIsRestrictedCountry(vonageExceptionDto)
+            }
 
             return VerifyDto.of(VerifyRes(
-                        requestId = response?.requestId ?: "",
-                        success = response?.status == VerifyStatus.OK,
+                        requestId = response.requestId,
+                        success = response.status == VerifyStatus.OK,
                         errorText = response?.errorText ?: ""))
-
-        }catch (vonageException: RuntimeException ) {
+        }catch (vonageException: RuntimeException) {
             throw VonageException("network, response parsing error", vonageException)
         }
     }
 
     override fun verifyCode(requestId: String, code: String): Boolean {
-        val check = vonageClient.verifyClient.check(requestId, code)
-        return check.status == VerifyStatus.OK
+        try {
+            val response = vonageClient.verifyClient.check(requestId, code)
+
+            if (response.status !== VerifyStatus.OK) {
+                val vonageExceptionDto = VonageExceptionDto(response.requestId, response.status, response.errorText)
+
+                checkCriticalStatusCode(vonageExceptionDto)
+
+                isMismatchCode(vonageExceptionDto)
+
+                repeatedInvalidCode(vonageExceptionDto)
+            }
+
+            return response.status == VerifyStatus.OK
+        }catch (vonageException: RuntimeException) {
+            throw VonageException("network, response parsing error", vonageException)
+        }
     }
 
-    fun checkBlacklist(response: VerifyResponse, phoneNumber: String) {
-        if(response.status !== VerifyStatus.NUMBER_BARRED) return
-        throw BlackListNumberException("blacklist number", getRequestId(response))
+    private fun checkBlacklist(vonageExceptionDto: VonageExceptionDto) {
+        if(vonageExceptionDto.status !== VerifyStatus.NUMBER_BARRED) return
+        throw BlackListNumberException("blacklist number", vonageExceptionDto)
     }
 
-    fun verifyAPIAccessIsRestrictedCountry(response: VerifyResponse, phoneNumber: String) {
-        if (response.status !== VerifyStatus.UNSUPPORTED_NETWORK) return
-        throw RestrictedCountryException("Request restricted country", getRequestId(response))
+    private fun verifyAPIAccessIsRestrictedCountry(vonageExceptionDto: VonageExceptionDto) {
+        if (vonageExceptionDto.status !== VerifyStatus.UNSUPPORTED_NETWORK) return
+        throw RestrictedCountryException("Request restricted country", vonageExceptionDto)
     }
 
-    fun checkCriticalStatusCode(response: VerifyResponse) {
-        val criticalStatus = response.status in setOf(
+    private fun checkCriticalStatusCode(vonageExceptionDto: VonageExceptionDto) {
+        val isCritical = vonageExceptionDto.status in setOf(
                 VerifyStatus.INVALID_CREDENTIALS,
                 VerifyStatus.INTERNAL_ERROR,
                 VerifyStatus.INVALID_REQUEST,
-                VerifyStatus.PARTNER_QUOTA_EXCEEDED
-        )
-        if(!criticalStatus) return
-        throw CriticalStatusCodeException("critical status code", getRequestId(response), response.status, response.errorText)
+                VerifyStatus.PARTNER_QUOTA_EXCEEDED)
+
+        if (!isCritical) return
+
+        throw CriticalStatusCodeException("critical status code", vonageExceptionDto)
     }
 
-    private fun getRequestId(response: VerifyResponse): String? = response.requestId.ifBlank { response.network }
+    private fun isMismatchCode(vonageExceptionDto: VonageExceptionDto) {
+        if (vonageExceptionDto.status !== VerifyStatus.INVALID_CODE) return
+        throw VerifyCodeMismatchException("verify code mismatch", vonageExceptionDto)
+    }
+    private fun repeatedInvalidCode(vonageExceptionDto: VonageExceptionDto) {
+        if (vonageExceptionDto.status !== VerifyStatus.WRONG_CODE_THROTTLED) return
+        throw RepeatedInvalidCodeException("The wrong code was provided too many times", vonageExceptionDto)
+    }
 
-
-    fun String.toExpirySeconds(default: Int = 180): Int {
+    private fun String.toExpirySeconds(default: Int = 180): Int {
         return try {
             this.toInt()
         } catch (e:NumberFormatException) {
