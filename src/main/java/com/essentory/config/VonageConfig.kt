@@ -10,7 +10,6 @@ import org.springframework.context.annotation.Configuration
 class VonageConfig {
     @Value("\${vonage_auth.api_key}")
     val apiKey: String? = null
-
     @Value("\${vonage_auth.api_secret}")
     val apiSecretKey: String? = null
 

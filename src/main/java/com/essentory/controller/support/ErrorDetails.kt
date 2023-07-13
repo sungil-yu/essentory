@@ -2,7 +2,7 @@ package com.essentory.controller.support
 
 import org.springframework.http.HttpStatus
 
-data class VerifyErrorResponse(
+data class ErrorDetails(
         val status: HttpStatus,
         val message: String,
         val requestId: String? = ""

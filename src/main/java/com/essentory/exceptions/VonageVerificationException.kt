@@ -2,14 +2,10 @@ package com.essentory.exceptions
 
 import com.essentory.controller.support.VonageExceptionDto
 
-abstract class VerifyException : RuntimeException {
+abstract class VonageVerificationException : RuntimeException {
 
-    private var vonageExceptionDto: VonageExceptionDto
+    private val vonageExceptionDto: VonageExceptionDto
 
-    val defaultMessage: String
-        get() {
-            return "Please try again later"
-        }
     constructor(message: String?, vonageExceptionDto: VonageExceptionDto) : super(message) {
         this.vonageExceptionDto = vonageExceptionDto
     }
@@ -22,31 +18,28 @@ abstract class VerifyException : RuntimeException {
     }
 }
 
-class BlackListNumberException : VerifyException {
-
+class BlackListNumberException : VonageVerificationException {
     constructor(message: String?, vonageExceptionDto: VonageExceptionDto) : super(message, vonageExceptionDto)
     constructor(message: String?, cause: Throwable?, vonageExceptionDto: VonageExceptionDto) : super(message, cause, vonageExceptionDto)
 }
 
-class CriticalStatusCodeException : VerifyException {
-
+class CriticalStatusCodeException : VonageVerificationException {
     constructor(message: String?, vonageExceptionDto: VonageExceptionDto) : super(message, vonageExceptionDto)
     constructor(message: String?, cause: Throwable?, vonageExceptionDto: VonageExceptionDto) : super(message, cause, vonageExceptionDto)
 }
 
-class RestrictedCountryException : VerifyException {
-
+class RestrictedCountryException : VonageVerificationException {
     constructor(message: String?, vonageExceptionDto: VonageExceptionDto) : super(message, vonageExceptionDto)
     constructor(message: String?, cause: Throwable?, vonageExceptionDto: VonageExceptionDto) : super(message, cause, vonageExceptionDto)
 }
 
-class VerifyCodeMismatchException : VerifyException {
+class VonageVerificationCodeMismatchException : VonageVerificationException {
     constructor(message: String?, vonageExceptionDto: VonageExceptionDto) : super(message, vonageExceptionDto)
     constructor(message: String?, cause: Throwable?, vonageExceptionDto: VonageExceptionDto) : super(message, cause, vonageExceptionDto)
 }
 
 
-class RepeatedInvalidCodeException : VerifyException {
+class RepeatedInvalidCodeException : VonageVerificationException {
     constructor(message: String?, vonageExceptionDto: VonageExceptionDto) : super(message, vonageExceptionDto)
     constructor(message: String?, cause: Throwable?, vonageExceptionDto: VonageExceptionDto) : super(message, cause, vonageExceptionDto)
 }

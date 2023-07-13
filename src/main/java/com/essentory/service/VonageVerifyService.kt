@@ -107,7 +107,7 @@ class VonageVerifyService (
     private fun isMismatchCode(vonageExceptionDto: VonageExceptionDto) {
         if (vonageExceptionDto.status !== VerifyStatus.INVALID_CODE) return
 
-        throw VerifyCodeMismatchException("verify code mismatch", vonageExceptionDto)
+        throw VonageVerificationCodeMismatchException("verify code mismatch", vonageExceptionDto)
     }
     private fun repeatedInvalidCode(vonageExceptionDto: VonageExceptionDto) {
         if (vonageExceptionDto.status !== VerifyStatus.WRONG_CODE_THROTTLED) return
