@@ -5,6 +5,6 @@ import com.essentory.dto.verify.VerifyReq
 import com.essentory.dto.verify.VerifyRes
 
 interface VerifyService {
-    fun verifyPhone(verifyReq: VerifyReq): VerifyDto<VerifyRes>
-    fun verifyCode(requestId: String, code: String): VerifyDto<VerifyRes>
+    fun verifyPhone(verifyReq: VerifyReq): VerifyRes
+    fun verifyCode(requestId: String, code: String): VerifyRes
 }

@@ -11,19 +11,19 @@ import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("/user")
-class VerifyController (val verifyService: VerifyService){
-
+class VerifyController (
+        val verifyService: VerifyService
+){
     @PostMapping("/verify")
     fun verifyUserPhone(@RequestBody verifyReq: @Valid VerifyReq): ResponseEntity<VerifyDto<VerifyRes>> {
         val response = verifyService.verifyPhone(verifyReq)
-        return ResponseEntity.ok(response)
+        return ResponseEntity.ok(VerifyDto.of(response))
     }
 
     @GetMapping("/verify/{requestId}")
-    fun checkCode(@RequestParam("code") code: String, @PathVariable("requestId") requestId: String):  ResponseEntity<VerifyDto<VerifyRes>> {
+    fun checkCode(@RequestParam("code") code: String, @PathVariable("requestId") requestId: String): ResponseEntity<VerifyDto<VerifyRes>> {
         val checkResult = verifyService.verifyCode(requestId, code)
-        return ResponseEntity.ok(checkResult)
+        return ResponseEntity.ok(VerifyDto.of(checkResult))
     }
-
 
 }
