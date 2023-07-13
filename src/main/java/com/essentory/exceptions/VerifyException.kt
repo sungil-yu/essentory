@@ -1,4 +1,4 @@
-package com.essentory.exception
+package com.essentory.exceptions
 
 import com.vonage.client.verify.VerifyStatus
 

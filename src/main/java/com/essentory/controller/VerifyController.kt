@@ -1,5 +1,6 @@
 package com.essentory.controller
 
+import com.essentory.controller.support.VerifyExceptionHandler
 import com.essentory.dto.verify.VerifyDto
 import com.essentory.dto.verify.VerifyReq
 import com.essentory.dto.verify.VerifyRes

@@ -3,15 +3,14 @@ package com.essentory.service
 import com.essentory.dto.verify.VerifyDto
 import com.essentory.dto.verify.VerifyReq
 import com.essentory.dto.verify.VerifyRes
-import com.essentory.exception.BlackListNumberException
-import com.essentory.exception.CriticalStatusCodeException
-import com.essentory.exception.RestrictedCountryException
-import com.essentory.exception.VonageException
+import com.essentory.exceptions.BlackListNumberException
+import com.essentory.exceptions.CriticalStatusCodeException
+import com.essentory.exceptions.RestrictedCountryException
+import com.essentory.exceptions.VonageException
 import com.vonage.client.VonageClient
 import com.vonage.client.verify.VerifyRequest
 import com.vonage.client.verify.VerifyResponse
 import com.vonage.client.verify.VerifyStatus
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
@@ -22,10 +21,10 @@ class VonageVerifyService (
 ) : VerifyService  {
 
     @Value("\${vonage_auth.brand_name}")
-    val brandName: String? = "brand_name"
+    private val brandName: String? = "brand_name"
 
     @Value("\${vonage_auth.expiry}")
-    val expiry: String? = "180"
+    private val expiry: String? = "180"
 
     override fun verifyPhone(verifyReq: VerifyReq): VerifyDto<VerifyRes> {
         try {

@@ -1,8 +1,9 @@
 package com.essentory.controller.support
 
-import com.essentory.exception.BlackListNumberException
-import com.essentory.exception.CriticalStatusCodeException
-import com.essentory.exception.RestrictedCountryException
+import com.essentory.exceptions.BlackListNumberException
+import com.essentory.exceptions.CriticalStatusCodeException
+import com.essentory.exceptions.RestrictedCountryException
+import com.essentory.exceptions.VonageException
 import com.vonage.client.verify.VerifyStatus
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
@@ -17,7 +18,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice
 @RestControllerAdvice
 class VerifyExceptionHandler {
 
-    val log = LoggerFactory.getLogger(this.javaClass)!!
+    private val log = LoggerFactory.getLogger(this.javaClass)!!
 
     @ExceptionHandler(BlackListNumberException::class)
     fun handleBlackListNumberException(e: Exception, @RequestAttribute("requestId") requestId: String?): ResponseEntity<VerifyErrorResponse> {
@@ -47,7 +48,7 @@ class VerifyExceptionHandler {
         return ResponseEntity.badRequest().body(VerifyErrorResponse(HttpStatus.BAD_REQUEST, "Please try again later"))
     }
 
-    @ExceptionHandler(CriticalStatusCodeException::class)
+    @ExceptionHandler(VonageException::class)
     fun handleUnprocessableVonageError(e: Exception): ResponseEntity<VerifyErrorResponse> {
         log.info("[vonage] network, response parsing error")
         log.error(e.message, e)
