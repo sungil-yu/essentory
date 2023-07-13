@@ -21,9 +21,9 @@ class VerifyController (val verifyService: VerifyService){
     }
 
     @GetMapping("/verify/{requestId}")
-    fun checkVerify(@RequestParam("code") code: String, @PathVariable("requestId") requestId: String): ResponseEntity<VerifyDto<Boolean>> {
+    fun checkVerify(@RequestParam("code") code: String, @PathVariable("requestId") requestId: String):  ResponseEntity<VerifyDto<VerifyRes>> {
         val checkResult = verifyService.verifyCode(requestId, code)
-        return ResponseEntity.ok(VerifyDto.of(checkResult))
+        return ResponseEntity.ok(checkResult)
     }
 
 

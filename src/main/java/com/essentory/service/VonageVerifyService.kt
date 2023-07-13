@@ -6,8 +6,9 @@ import com.essentory.dto.verify.VerifyReq
 import com.essentory.dto.verify.VerifyRes
 import com.essentory.exceptions.*
 import com.vonage.client.VonageClient
+import com.vonage.client.VonageClientException
+import com.vonage.client.VonageResponseParseException
 import com.vonage.client.verify.VerifyRequest
-import com.vonage.client.verify.VerifyResponse
 import com.vonage.client.verify.VerifyStatus
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -46,13 +47,17 @@ class VonageVerifyService (
                         requestId = response.requestId,
                         success = response.status == VerifyStatus.OK,
                         errorText = response?.errorText ?: ""))
-        }catch (vonageException: RuntimeException) {
-            throw VonageException("network, response parsing error", vonageException)
+
+        }catch (vonageException: VonageClientException) {
+            throw VonageException("vonage server network disconnected", vonageException)
+        }catch (vonageException: VonageResponseParseException) {
+            throw VonageException("response parsing error", vonageException)
         }
     }
 
-    override fun verifyCode(requestId: String, code: String): Boolean {
+    override fun verifyCode(requestId: String, code: String): VerifyDto<VerifyRes> {
         try {
+
             val response = vonageClient.verifyClient.check(requestId, code)
 
             if (response.status !== VerifyStatus.OK) {
@@ -65,19 +70,27 @@ class VonageVerifyService (
                 repeatedInvalidCode(vonageExceptionDto)
             }
 
-            return response.status == VerifyStatus.OK
-        }catch (vonageException: RuntimeException) {
-            throw VonageException("network, response parsing error", vonageException)
+            return VerifyDto.of(VerifyRes(
+                    requestId = response.requestId,
+                    success = response.status == VerifyStatus.OK,
+                    errorText = response?.errorText ?: ""))
+
+        }catch (vonageException: VonageClientException) {
+            throw VonageException("vonage server network disconnected", vonageException)
+        }catch (vonageException: VonageResponseParseException) {
+            throw VonageException("response parsing error", vonageException)
         }
     }
 
     private fun checkBlacklist(vonageExceptionDto: VonageExceptionDto) {
         if(vonageExceptionDto.status !== VerifyStatus.NUMBER_BARRED) return
+
         throw BlackListNumberException("blacklist number", vonageExceptionDto)
     }
 
     private fun verifyAPIAccessIsRestrictedCountry(vonageExceptionDto: VonageExceptionDto) {
         if (vonageExceptionDto.status !== VerifyStatus.UNSUPPORTED_NETWORK) return
+
         throw RestrictedCountryException("Request restricted country", vonageExceptionDto)
     }
 
@@ -85,20 +98,20 @@ class VonageVerifyService (
         val isCritical = vonageExceptionDto.status in setOf(
                 VerifyStatus.INVALID_CREDENTIALS,
                 VerifyStatus.INTERNAL_ERROR,
-                VerifyStatus.INVALID_REQUEST,
                 VerifyStatus.PARTNER_QUOTA_EXCEEDED)
 
         if (!isCritical) return
-
-        throw CriticalStatusCodeException("critical status code", vonageExceptionDto)
+        throw CriticalStatusCodeException("critical status code :${vonageExceptionDto.status}", vonageExceptionDto)
     }
 
     private fun isMismatchCode(vonageExceptionDto: VonageExceptionDto) {
         if (vonageExceptionDto.status !== VerifyStatus.INVALID_CODE) return
+
         throw VerifyCodeMismatchException("verify code mismatch", vonageExceptionDto)
     }
     private fun repeatedInvalidCode(vonageExceptionDto: VonageExceptionDto) {
         if (vonageExceptionDto.status !== VerifyStatus.WRONG_CODE_THROTTLED) return
+
         throw RepeatedInvalidCodeException("The wrong code was provided too many times", vonageExceptionDto)
     }
 

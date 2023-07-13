@@ -3,7 +3,9 @@ package com.essentory.exceptions
 import com.essentory.controller.support.VonageExceptionDto
 
 abstract class VerifyException : RuntimeException {
+
     private var vonageExceptionDto: VonageExceptionDto
+
     val defaultMessage: String
         get() {
             return "Please try again later"
@@ -14,6 +16,9 @@ abstract class VerifyException : RuntimeException {
 
     constructor(message: String?, cause: Throwable?, vonageExceptionDto: VonageExceptionDto) : super(message, cause) {
         this.vonageExceptionDto = vonageExceptionDto
+    }
+    fun getVonageExceptionDto(): VonageExceptionDto {
+        return vonageExceptionDto
     }
 }
 
