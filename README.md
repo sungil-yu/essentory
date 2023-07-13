@@ -9,7 +9,8 @@
 
 [Vendors features](https://chinggin.tistory.com/1018)
 
-환경
+개발 환경
+
  * Java 17 이상
  * Kotlin 1.8.0
  * Spring Boot 3.1.1
@@ -17,7 +18,8 @@
  * Vonage Java SDK 7.6.0
 
 
-다음과 같은 주요 의존성을 포함합니다:
+
+의존성
 
 Spring Boot Starter: Spring Boot 애플리케이션을 구성하는 데 필요한 기본 의존성을 제공합니다.
 
