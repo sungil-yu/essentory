@@ -8,29 +8,8 @@ import org.springframework.stereotype.Service
 
 @Service
 class VonageVerifyService(
-    private val vonageClientWrapper: VonageClientWrapper,
+        private val vonageVerifyAdapter: VonageVerifyAdapter,
 ) : VerifyService {
-
-
-    override fun verifyPhone(verifyReq: VerifyReq): VerifyRes {
-
-        val result = vonageClientWrapper.verify(verifyReq)
-
-        return VerifyRes(
-                requestId = result.requestId,
-                success = result.success,
-                errorText = result.errorText
-        )
-    }
-
-    override fun verifyCode(requestId: String, code: String): VerifyRes {
-
-        val result = vonageClientWrapper.check(requestId, code)
-
-        return VerifyRes(
-                requestId = result.requestId,
-                success = result.success,
-                errorText = result.errorText
-        )
-    }
+    override fun verifyPhone(verifyReq: VerifyReq): VerifyRes = vonageVerifyAdapter.verifyPhone(verifyReq)
+    override fun verifyCode(requestId: String, code: String): VerifyRes = vonageVerifyAdapter.check(requestId, code)
 }

@@ -5,7 +5,9 @@ import com.essentory.exceptions.VonageException
 import com.vonage.client.VonageClient
 import com.vonage.client.VonageClientException
 import com.vonage.client.VonageResponseParseException
+import com.vonage.client.verify.CheckResponse
 import com.vonage.client.verify.VerifyRequest
+import com.vonage.client.verify.VerifyResponse
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 
@@ -27,34 +29,8 @@ class VonageClientWrapper {
     private val vonageClient: VonageClient by lazy {
         createVonageClient()
     }
-
-    fun verify(verifyRequest: VerifyReq): VonageVerifyResult {
-        runCatching {
-            vonageClient.verifyClient.verify(createVerifyRequest(verifyRequest))
-        }.onFailure {
-            when (it) {
-                is VonageClientException -> throw VonageException("vonage server network disconnected", it)
-                is VonageResponseParseException -> throw VonageException("response parsing error", it)
-                else -> throw VonageException("unknown error", it)
-            }
-        }.getOrThrow().run {
-            return VonageAdapter.adaptVerifyResponse(this)
-        }
-    }
-
-    fun check(requestId: String, code: String): VonageVerifyResult {
-        runCatching {
-            vonageClient.verifyClient.check(requestId, code)
-        }.onFailure {
-            when (it) {
-                is VonageClientException -> throw VonageException("vonage server network disconnected", it)
-                is VonageResponseParseException -> throw VonageException("response parsing error", it)
-                else -> throw VonageException("unknown error", it)
-            }
-        }.getOrThrow().run {
-            return VonageAdapter.adaptCheckResponse(this)
-        }
-    }
+    fun verify(verifyRequest: VerifyReq): VerifyResponse = vonageClient.verifyClient.verify(createVerifyRequest(verifyRequest))
+    fun check(requestId: String, code: String): CheckResponse = vonageClient.verifyClient.check(requestId, code)
 
     private fun createVonageClient(): VonageClient {
         return VonageClient.builder()
@@ -62,7 +38,6 @@ class VonageClientWrapper {
                 .apiSecret(apiSecret)
                 .build()
     }
-
     private fun createVerifyRequest(verifyReq: VerifyReq): VerifyRequest {
         return VerifyRequest.builder(verifyReq.phoneNumber(), brandName)
                 .pinExpiry(expiry.toExpirySeconds())
