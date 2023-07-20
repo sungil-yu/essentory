@@ -8,6 +8,7 @@ abstract class VonageVerificationException(message: String?, private val vonageE
     }
 }
 
+class InvalidParamsException(message: String?, vonageExceptionDto: VonageExceptionDto) : VonageVerificationException(message, vonageExceptionDto)
 class BlackListNumberException(message: String?, vonageExceptionDto: VonageExceptionDto) : VonageVerificationException(message, vonageExceptionDto)
 class CriticalStatusCodeException(message: String?, vonageExceptionDto: VonageExceptionDto) : VonageVerificationException(message, vonageExceptionDto)
 class RestrictedCountryException(message: String?, vonageExceptionDto: VonageExceptionDto) : VonageVerificationException(message, vonageExceptionDto)

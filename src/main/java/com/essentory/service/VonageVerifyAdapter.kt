@@ -15,44 +15,29 @@ import org.springframework.stereotype.Component
 class VonageVerifyAdapter(
         private val vonageClientWrapper: VonageClientWrapper
 ) {
-
-    fun verifyPhone(verifyReq: VerifyReq): VerifyRes {
-        runCatching {
-            vonageClientWrapper.requestVerifyCode(verifyReq)
-        }.onFailure {
-            when (it) {
-                is VonageClientException -> throw VonageException("vonage server network disconnected", it)
-                is VonageResponseParseException -> throw VonageException("response parsing error", it)
-            }
-        }.getOrThrow().run {
-            val result = adaptVerifyResponse(this)
-            return VerifyRes(
-                    requestId = result.requestId,
-                    success = result.success,
-                    errorText = result.errorText
-            )
+    fun requestVerifyCode(verifyReq: VerifyReq): VerifyRes {
+        try {
+            val response = vonageClientWrapper.requestVerifyCode(verifyReq)
+            val result = adaptVerifyResponse(response)
+            return VerifyRes(result.requestId, result.success, result.errorText)
+        } catch (e: VonageClientException) {
+            throw VonageException("vonage server network disconnected", e)
+        } catch (e: VonageResponseParseException) {
+            throw VonageException("response parsing error", e)
         }
     }
 
-    fun check(requestId: String, code: String): VerifyRes {
-        runCatching {
-            vonageClientWrapper.verifyCode(requestId, code)
-        }.onFailure {
-            when (it) {
-                is VonageClientException -> throw VonageException("vonage server network disconnected", it)
-                is VonageResponseParseException -> throw VonageException("response parsing error", it)
-                else -> throw VonageException("unknown error", it)
-            }
-        }.getOrThrow().run {
-            val result = adaptCheckResponse(this)
-            return VerifyRes(
-                    requestId = result.requestId,
-                    success = result.success,
-                    errorText = result.errorText
-            )
+    fun verifyCode(requestId: String, code: String): VerifyRes {
+        try {
+            val response = vonageClientWrapper.verifyCode(requestId, code)
+            val result = adaptCheckResponse(response)
+            return VerifyRes(result.requestId, result.success, result.errorText)
+        } catch (e: VonageClientException) {
+            throw VonageException("vonage server network disconnected", e)
+        } catch (e: VonageResponseParseException) {
+            throw VonageException("response parsing error", e)
         }
     }
-
     private fun adaptVerifyResponse(response: VerifyResponse): VonageVerifyResult {
         val vonageExceptionDto = VonageExceptionDto(
                 requestId = response.requestId,
@@ -63,7 +48,8 @@ class VonageVerifyAdapter(
         when (response.status) {
             VerifyStatus.NUMBER_BARRED -> throw BlackListNumberException("blacklist number", vonageExceptionDto)
             VerifyStatus.UNSUPPORTED_NETWORK -> throw RestrictedCountryException("Request restricted country", vonageExceptionDto)
-            VerifyStatus.MISSING_PARAMS -> throw MissingParamsException("bad request params or missing params", vonageExceptionDto)
+            VerifyStatus.MISSING_PARAMS -> throw MissingParamsException("missing params", vonageExceptionDto)
+            VerifyStatus.INVALID_PARAMS -> throw InvalidParamsException("invalid params", vonageExceptionDto)
             else -> checkCriticalStatusCode(vonageExceptionDto)
         }
 

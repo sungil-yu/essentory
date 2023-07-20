@@ -10,6 +10,6 @@ import org.springframework.stereotype.Service
 class VonageVerifyService(
         private val vonageVerifyAdapter: VonageVerifyAdapter,
 ) : VerifyService {
-    override fun verifyPhone(verifyReq: VerifyReq): VerifyRes = vonageVerifyAdapter.verifyPhone(verifyReq)
-    override fun verifyCode(requestId: String, code: String): VerifyRes = vonageVerifyAdapter.check(requestId, code)
+    override fun verifyPhone(verifyReq: VerifyReq): VerifyRes = vonageVerifyAdapter.requestVerifyCode(verifyReq)
+    override fun verifyCode(requestId: String, code: String): VerifyRes = vonageVerifyAdapter.verifyCode(requestId, code)
 }
