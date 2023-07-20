@@ -47,9 +47,10 @@ class VonageVerifyAdapter(
         )
         when (response.status) {
             VerifyStatus.NUMBER_BARRED -> throw BlackListNumberException("blacklist number", vonageExceptionDto)
-            VerifyStatus.UNSUPPORTED_NETWORK -> throw RestrictedCountryException("Request restricted country", vonageExceptionDto)
+            VerifyStatus.UNSUPPORTED_NETWORK -> throw RestrictedCountryException("bad request, restricted country", vonageExceptionDto)
             VerifyStatus.MISSING_PARAMS -> throw MissingParamsException("missing params", vonageExceptionDto)
             VerifyStatus.INVALID_PARAMS -> throw InvalidParamsException("invalid params", vonageExceptionDto)
+            VerifyStatus.WRONG_CODE_THROTTLED -> throw RepeatedInvalidCodeException("The wrong code was provided too many times", vonageExceptionDto)
             else -> checkCriticalStatusCode(vonageExceptionDto)
         }
 
@@ -67,7 +68,7 @@ class VonageVerifyAdapter(
         )
 
         when (response.status) {
-            VerifyStatus.INVALID_CODE -> throw VonageVerificationCodeMismatchException("verify code mismatch", vonageExceptionDto)
+            VerifyStatus.INVALID_CODE -> throw VerifyCodeMismatchException("verify code mismatch", vonageExceptionDto)
             VerifyStatus.WRONG_CODE_THROTTLED -> throw RepeatedInvalidCodeException("The wrong code was provided too many times", vonageExceptionDto)
             else -> checkCriticalStatusCode(vonageExceptionDto)
         }

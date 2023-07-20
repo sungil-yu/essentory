@@ -16,7 +16,7 @@ class VerifyController (
 ){
     @PostMapping("/verify")
     fun verifyUserPhone(@RequestBody verifyReq: @Valid VerifyReq): ResponseEntity<VerifyDto<VerifyRes>> {
-        val response = verifyService.verifyPhone(verifyReq)
+        val response = verifyService.requestVerifyCode(verifyReq)
         return ResponseEntity.ok(VerifyDto.of(response))
     }
 

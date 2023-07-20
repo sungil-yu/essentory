@@ -1,8 +1,6 @@
 package com.essentory.controller.support
 
 import com.essentory.exceptions.*
-import com.vonage.client.VonageClientException
-import com.vonage.client.VonageResponseParseException
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
@@ -43,8 +41,8 @@ class VonageVerifyExceptionHandler {
         log.info(e.message, e)
         return ResponseEntity.badRequest().body(ErrorDetails(HttpStatus.BAD_REQUEST, defaultMessage))
     }
-    @ExceptionHandler(VonageVerificationCodeMismatchException::class)
-    fun handleVerifyCodeMismatchException(e: VonageVerificationCodeMismatchException): ResponseEntity<ErrorDetails> {
+    @ExceptionHandler(VerifyCodeMismatchException::class)
+    fun handleVerifyCodeMismatchException(e: VerifyCodeMismatchException): ResponseEntity<ErrorDetails> {
         val vonageExceptionDto = e.getVonageExceptionDto()
         log.info("[vonage-codeMismatch] verify code mismatch,  request id : {} ", vonageExceptionDto.requestId)
         return ResponseEntity.badRequest().body(ErrorDetails(HttpStatus.BAD_REQUEST, e.message ?: defaultMessage, vonageExceptionDto.requestId))
@@ -73,7 +71,7 @@ class VonageVerifyExceptionHandler {
     fun handleVonageException(e: RuntimeException): ResponseEntity<ErrorDetails> {
         log.info("[vonage] if there was a problem with the Vonage request or response objects.")
         log.error(e.message, e)
-        val errorDetails = ErrorDetails(HttpStatus.BAD_REQUEST, defaultMessage, null)
+        val errorDetails = ErrorDetails(HttpStatus.BAD_REQUEST, e.message ?: defaultMessage, null)
         return ResponseEntity.badRequest().body(errorDetails)
     }
 
