@@ -1,10 +1,7 @@
 package com.essentory.service
 
 import com.essentory.dto.verify.VerifyReq
-import com.essentory.exceptions.VonageException
 import com.vonage.client.VonageClient
-import com.vonage.client.VonageClientException
-import com.vonage.client.VonageResponseParseException
 import com.vonage.client.verify.CheckResponse
 import com.vonage.client.verify.VerifyRequest
 import com.vonage.client.verify.VerifyResponse
@@ -29,8 +26,8 @@ class VonageClientWrapper {
     private val vonageClient: VonageClient by lazy {
         createVonageClient()
     }
-    fun verify(verifyRequest: VerifyReq): VerifyResponse = vonageClient.verifyClient.verify(createVerifyRequest(verifyRequest))
-    fun check(requestId: String, code: String): CheckResponse = vonageClient.verifyClient.check(requestId, code)
+    fun requestVerifyCode(verifyRequest: VerifyReq): VerifyResponse = vonageClient.verifyClient.verify(createVerifyRequest(verifyRequest))
+    fun verifyCode(requestId: String, code: String): CheckResponse = vonageClient.verifyClient.check(requestId, code)
 
     private fun createVonageClient(): VonageClient {
         return VonageClient.builder()

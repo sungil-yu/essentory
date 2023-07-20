@@ -15,14 +15,14 @@ import org.springframework.stereotype.Component
 class VonageVerifyAdapter(
         private val vonageClientWrapper: VonageClientWrapper
 ) {
+
     fun verifyPhone(verifyReq: VerifyReq): VerifyRes {
         runCatching {
-            vonageClientWrapper.verify(verifyReq)
+            vonageClientWrapper.requestVerifyCode(verifyReq)
         }.onFailure {
             when (it) {
                 is VonageClientException -> throw VonageException("vonage server network disconnected", it)
                 is VonageResponseParseException -> throw VonageException("response parsing error", it)
-                else -> throw VonageException("unknown error", it)
             }
         }.getOrThrow().run {
             val result = adaptVerifyResponse(this)
@@ -33,9 +33,10 @@ class VonageVerifyAdapter(
             )
         }
     }
+
     fun check(requestId: String, code: String): VerifyRes {
         runCatching {
-            vonageClientWrapper.check(requestId, code)
+            vonageClientWrapper.verifyCode(requestId, code)
         }.onFailure {
             when (it) {
                 is VonageClientException -> throw VonageException("vonage server network disconnected", it)
@@ -59,10 +60,10 @@ class VonageVerifyAdapter(
                 errorText = response.errorText,
                 network = response.network
         )
-
         when (response.status) {
             VerifyStatus.NUMBER_BARRED -> throw BlackListNumberException("blacklist number", vonageExceptionDto)
             VerifyStatus.UNSUPPORTED_NETWORK -> throw RestrictedCountryException("Request restricted country", vonageExceptionDto)
+            VerifyStatus.MISSING_PARAMS -> throw MissingParamsException("bad request params or missing params", vonageExceptionDto)
             else -> checkCriticalStatusCode(vonageExceptionDto)
         }
 

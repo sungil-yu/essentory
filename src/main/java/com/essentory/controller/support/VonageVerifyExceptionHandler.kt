@@ -46,16 +46,22 @@ class VonageVerifyExceptionHandler {
     @ExceptionHandler(VonageVerificationCodeMismatchException::class)
     fun handleVerifyCodeMismatchException(e: VonageVerificationException): ResponseEntity<ErrorDetails> {
         val vonageExceptionDto = e.getVonageExceptionDto()
-        log.info("[vonage-codeMismatch] verify code mismatch,  request id : {} ", vonageExceptionDto.requestId?.ifBlank {vonageExceptionDto.network})
-        return ResponseEntity.badRequest().body(ErrorDetails(HttpStatus.BAD_REQUEST, e.message ?: defaultMessage, vonageExceptionDto.requestId?.ifBlank {vonageExceptionDto.network}))
+        log.info("[vonage-codeMismatch] verify code mismatch,  request id : {} ", vonageExceptionDto.requestId)
+        return ResponseEntity.badRequest().body(ErrorDetails(HttpStatus.BAD_REQUEST, e.message ?: defaultMessage, vonageExceptionDto.requestId))
     }
     @ExceptionHandler(RepeatedInvalidCodeException::class)
     fun handleRepeatedInvalidCodeException(e: VonageVerificationException): ResponseEntity<ErrorDetails> {
         val vonageExceptionDto = e.getVonageExceptionDto()
-        log.info("[vonage-wrong_code_throttled] The wrong code was provided too many times,  request id : {} ", vonageExceptionDto.requestId?.ifBlank {vonageExceptionDto.network})
-        return ResponseEntity.badRequest().body(ErrorDetails(HttpStatus.BAD_REQUEST, e.message ?: defaultMessage, vonageExceptionDto.requestId?.ifBlank {vonageExceptionDto.network}))
+        log.info("[vonage-wrong_code_throttled] The wrong code was provided too many times,  request id : {} ", vonageExceptionDto.requestId)
+        return ResponseEntity.badRequest().body(ErrorDetails(HttpStatus.BAD_REQUEST, e.message ?: defaultMessage, vonageExceptionDto.requestId))
     }
-
+    @ExceptionHandler(MissingParamsException::class)
+    fun handlesMissingParamsException(e: VonageVerificationException): ResponseEntity<ErrorDetails> {
+        val vonageExceptionDto = e.getVonageExceptionDto()
+        log.error(e.message, e)
+        val errorDetails = ErrorDetails(HttpStatus.BAD_REQUEST, defaultMessage, vonageExceptionDto.requestId)
+        return ResponseEntity.badRequest().body(errorDetails)
+    }
     @ExceptionHandler(VonageClientException::class, VonageResponseParseException::class)
     fun handleVonageException(e: RuntimeException): ResponseEntity<ErrorDetails> {
         log.info("[vonage] if there was a problem with the Vonage request or response objects.")
@@ -63,5 +69,7 @@ class VonageVerifyExceptionHandler {
         val errorDetails = ErrorDetails(HttpStatus.BAD_REQUEST, defaultMessage, null)
         return ResponseEntity.badRequest().body(errorDetails)
     }
+
+
 
 }
